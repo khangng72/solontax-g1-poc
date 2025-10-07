@@ -1,16 +1,28 @@
 package solontax.g1.hexmanagement.infrastructure.adapter.out.jpa;
 
+import cz.jirutka.rsql.parser.RSQLParser;
+import cz.jirutka.rsql.parser.ast.Node;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 import lombok.AllArgsConstructor;
+import lombok.extern.log4j.Log4j2;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Component;
+import solontax.g1.hexmanagement.common.dto.PersonQueryParams;
 import solontax.g1.hexmanagement.domain.model.Person;
 import solontax.g1.hexmanagement.domain.port.PersonRepositoryPort;
 import solontax.g1.hexmanagement.infrastructure.adapter.out.entity.PersonEntity;
+import solontax.g1.hexmanagement.infrastructure.filter.RSQLCustomVisitor;
 import solontax.g1.hexmanagement.infrastructure.repository.PersonJpaRepository;
 
 @Component
 @AllArgsConstructor
+@Log4j2
 public class PersonJpaAdapter implements PersonRepositoryPort {
     private final PersonJpaRepository repository;
 
@@ -62,5 +74,30 @@ public class PersonJpaAdapter implements PersonRepositoryPort {
         }
 
         return Optional.empty();
+    }
+
+    @Override
+    public Page<Person> search(PersonQueryParams personQueryParams) {
+        Specification<PersonEntity> specification = null;
+
+        if (personQueryParams.getQuery() != null) {
+            String query = personQueryParams.getQuery();
+            Node rootNode = new RSQLParser().parse(query);
+            specification = rootNode.accept(new RSQLCustomVisitor<>());
+        }
+
+        Sort sort = Objects.equals(personQueryParams
+                .getSortDirection(), "desc") ?
+                Sort.by(personQueryParams.getSortBy()).descending() :
+                Sort.by(personQueryParams.getSortBy()).ascending();
+
+        Pageable pageable = PageRequest.of(
+                personQueryParams.getOffset(),
+                personQueryParams.getSize(),
+                sort
+        );
+
+        Page<PersonEntity> persons = repository.findAll(specification, pageable);
+        return persons.map(this::toPerson);
     }
 }

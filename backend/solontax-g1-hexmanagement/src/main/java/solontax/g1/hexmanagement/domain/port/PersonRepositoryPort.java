@@ -2,6 +2,8 @@ package solontax.g1.hexmanagement.domain.port;
 
 import java.util.Optional;
 import java.util.UUID;
+import org.springframework.data.domain.Page;
+import solontax.g1.hexmanagement.common.dto.PersonQueryParams;
 import solontax.g1.hexmanagement.domain.model.Person;
 
 public interface PersonRepositoryPort {
@@ -10,4 +12,6 @@ public interface PersonRepositoryPort {
     Optional<Person> findById(UUID id);
 
     Optional<Person> findByTaxNumber(Long taxNumber);
+
+    Page<Person> search(PersonQueryParams personQueryParams);
 }

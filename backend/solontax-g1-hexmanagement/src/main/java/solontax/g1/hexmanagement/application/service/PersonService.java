@@ -3,9 +3,11 @@ package solontax.g1.hexmanagement.application.service;
 import java.time.LocalDate;
 import java.util.Optional;
 import lombok.AllArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import solontax.g1.hexmanagement.application.dto.PersonDto;
+import solontax.g1.hexmanagement.common.dto.PersonQueryParams;
 import solontax.g1.hexmanagement.domain.model.Person;
 import solontax.g1.hexmanagement.domain.port.PersonRepositoryPort;
 import solontax.g1.hexmanagement.exception.CommonException;
@@ -54,5 +56,11 @@ public class PersonService {
                              .message("Cannot found person with tax number: " + taxNumber)
                              .status(HttpStatus.NOT_FOUND)
                              .build();
+    }
+
+    public Page<PersonDto> search(PersonQueryParams personQueryParams) {
+        Page<Person> personPage = personRepository.search(personQueryParams);
+
+        return personPage.map(this::toPersonDto);
     }
 }
