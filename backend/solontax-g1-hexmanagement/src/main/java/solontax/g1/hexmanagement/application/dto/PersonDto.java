@@ -1,6 +1,5 @@
 package solontax.g1.hexmanagement.application.dto;
 
-import java.time.LocalDate;
 import java.util.UUID;
 import lombok.AllArgsConstructor;
 import lombok.Builder;

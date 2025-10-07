@@ -2,14 +2,14 @@ name: solontax-g1
 
 services:
   postgres:
-    image: postgres:15
+    image: postgres:13.22-alpine3.21
     container_name: solontax-g1-postgres
     restart: always
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: solontax_g1
-    command: [ "postgres", "-p", "5430" ]
+    command: [ "postgres", "-p", "5430","-c", "timezone=UTC" ]
     ports:
       - "5430:5430"
     volumes:
