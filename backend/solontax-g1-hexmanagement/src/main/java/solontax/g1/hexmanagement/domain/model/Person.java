@@ -23,4 +23,6 @@ public class Person {
     private LocalDate dateOfBirth;
 
     private Long taxNumber;
+
+    private Long taxDebt;
 }

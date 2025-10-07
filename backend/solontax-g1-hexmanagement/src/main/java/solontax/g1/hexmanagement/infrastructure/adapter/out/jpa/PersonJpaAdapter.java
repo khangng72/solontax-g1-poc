@@ -33,6 +33,7 @@ public class PersonJpaAdapter implements PersonRepositoryPort {
                 .lastName(person.getLastName())
                 .dateOfBirth(person.getDateOfBirth())
                 .taxNumber(person.getTaxNumber())
+                .taxDebt(person.getTaxDebt())
                 .build();
     }
 
@@ -44,6 +45,7 @@ public class PersonJpaAdapter implements PersonRepositoryPort {
                 .lastName(entity.getLastName())
                 .dateOfBirth(entity.getDateOfBirth())
                 .taxNumber(entity.getTaxNumber())
+                .taxDebt(entity.getTaxDebt())
                 .build();
     }
 

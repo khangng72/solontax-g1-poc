@@ -5,6 +5,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 import java.time.LocalDate;
 import java.util.UUID;
@@ -34,4 +35,14 @@ public class PersonEntity {
 
     @Column(updatable = false, unique = true)
     private Long taxNumber;
+
+    @Column(nullable = false)
+    private Long taxDebt;
+
+    @PrePersist
+    public void setDefaultValueForTaxDebt() {
+        if (taxDebt == null) {
+            taxDebt = 0L;
+        }
+    }
 }

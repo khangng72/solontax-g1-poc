@@ -14,8 +14,14 @@ import lombok.Setter;
 @Builder
 public class PersonDto {
     private UUID id;
+
     private String firstName;
+
     private String lastName;
+
     private Long age;
+
     private Long taxNumber;
+
+    private Long taxDebt;
 }
