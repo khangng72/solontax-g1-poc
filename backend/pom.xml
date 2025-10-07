@@ -39,7 +39,7 @@
   <modelVersion>4.0.0</modelVersion>
 
   <modules>
-    <module>solontax-g1-hexmanagement</module>
+    <module>solontax-g1-management</module>
   </modules>
 
   <name>solontax-g1</name>
