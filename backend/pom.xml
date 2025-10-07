@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns="http://maven.apache.org/POM/4.0.0"
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
+                             http://maven.apache.org/xsd/maven-4.0.0.xsd">
+
+  <artifactId>solontax-g1</artifactId>
+
+  <build>
+    <pluginManagement>
+      <plugins>
+        <plugin>
+          <artifactId>spring-boot-maven-plugin</artifactId>
+          <groupId>org.springframework.boot</groupId>
+          <version>${spring.boot.version}</version>
+        </plugin>
+        <plugin>
+          <artifactId>maven-compiler-plugin</artifactId>
+          <configuration>
+            <release>${java.version}</release>
+          </configuration>
+          <groupId>org.apache.maven.plugins</groupId>
+        </plugin>
+      </plugins>
+    </pluginManagement>
+  </build>
+  <dependencyManagement>
+    <dependencies>
+      <dependency>
+        <artifactId>spring-boot-dependencies</artifactId>
+        <groupId>org.springframework.boot</groupId>
+        <scope>import</scope>
+        <type>pom</type>
+        <version>${spring.boot.version}</version>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
+  <groupId>solontax.g1</groupId>
+  <modelVersion>4.0.0</modelVersion>
+
+  <modules>
+    <module>solontax-g1-hexmanagement</module>
+  </modules>
+
+  <name>solontax-g1</name>
+
+  <packaging>pom</packaging>
+
+  <properties>
+    <java.version>17</java.version>
+    <maven.compiler.source>${java.version}</maven.compiler.source>
+    <maven.compiler.target>${java.version}</maven.compiler.target>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <spring.boot.version>3.5.6</spring.boot.version>
+  </properties>
+
+  <version>0.0.1-SNAPSHOT</version>
+</project>
