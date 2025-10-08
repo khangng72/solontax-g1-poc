@@ -43,7 +43,7 @@ services:
   solontax-g1-management:
     build:
       context: .
-      dockerfile: solontax-g1-management/Dockerfile
+      dockerfile: Dockerfile
     container_name: solontax-g1-management
     image: solontax-g1-management
     restart: always
