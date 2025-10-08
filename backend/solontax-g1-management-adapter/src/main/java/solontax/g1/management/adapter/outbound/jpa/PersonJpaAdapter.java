@@ -103,4 +103,9 @@ public class PersonJpaAdapter implements PersonRepositoryPort {
         Page<PersonEntity> persons = repository.findAll(specification, pageable);
         return persons.map(this::toPerson);
     }
+
+    @Override
+    public void deleteById(UUID id) {
+        repository.deleteById(id);
+    }
 }

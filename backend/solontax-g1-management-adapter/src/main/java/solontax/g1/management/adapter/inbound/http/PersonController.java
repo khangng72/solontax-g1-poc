@@ -12,6 +12,8 @@ import solontax.g1.management.core.common.dto.PersonQueryParams;
 import solontax.g1.management.core.domain.model.Person;
 import solontax.g1.management.kafka.producer.PersonProducer;
 
+import java.util.UUID;
+
 @RestController
 @RequestMapping("/v1/person")
 @RequiredArgsConstructor
@@ -40,8 +42,14 @@ public class PersonController {
     }
 
     @PostMapping("/kafka")
-    public String testKafka(@RequestBody Person person) {
-        producer.sendMessage("person-events", person.getFirstName());
-        return "kafka";
+    public ResponseEntity<String> sendUpsertEvent(@RequestBody Person person) {
+        producer.upsert(person);
+        return ResponseEntity.ok("Upsert person event sent");
+    }
+
+    @DeleteMapping("/kafka/{id}")
+    public ResponseEntity<String> sendDeleteEvent(@PathVariable("id") UUID id) {
+        producer.delete(id);
+        return ResponseEntity.ok("Delete person event send");
     }
 }

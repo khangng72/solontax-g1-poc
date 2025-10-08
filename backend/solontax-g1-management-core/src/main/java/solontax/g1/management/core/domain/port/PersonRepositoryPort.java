@@ -15,4 +15,6 @@ public interface PersonRepositoryPort {
     Optional<Person> findByTaxNumber(Long taxNumber);
 
     Page<Person> search(PersonQueryParams personQueryParams);
+
+    void deleteById(UUID id);
 }
