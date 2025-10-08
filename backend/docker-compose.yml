@@ -9,7 +9,7 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: solontax_g1
-    command: [ "postgres", "-p", "5430","-c", "timezone=UTC" ]
+    command: [ "postgres", "-p", "5430", "-c", "timezone=UTC" ]
     ports:
       - "5430:5430"
     volumes:
@@ -17,26 +17,26 @@ services:
     networks:
       - solontax-network
 
-  kafka:
+  kafka-broker:
     image: apache/kafka:latest
-    container_name: solontax-g1-kafka
-    restart: always
+    container_name: kafka-broker
     ports:
-      - "9092:9092"
+      - "9092:9092"   # for Windows (host)
+      - "29092:29092" # for Docker containers
     environment:
       KAFKA_NODE_ID: 1
       KAFKA_PROCESS_ROLES: broker,controller
-      KAFKA_LISTENERS: PLAINTEXT://:9092,CONTROLLER://:9093
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://solontax-g1-kafka:9092
       KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
-      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@solontax-g1-kafka:9093
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka-broker:9093
+      KAFKA_LISTENERS: PLAINTEXT_HOST://0.0.0.0:9092,PLAINTEXT_DOCKER://0.0.0.0:29092,CONTROLLER://0.0.0.0:9093
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT_HOST://localhost:9092,PLAINTEXT_DOCKER://kafka-broker:29092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT_HOST:PLAINTEXT,PLAINTEXT_DOCKER:PLAINTEXT,CONTROLLER:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT_DOCKER
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
-      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
       KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
       KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
       KAFKA_NUM_PARTITIONS: 3
-    volumes:
-      - kafka_data:/tmp/kraft-combined-logs
     networks:
       - solontax-network
 
@@ -56,17 +56,15 @@ services:
       SPRING_SERVER_PORT: 1975
       SPRING_JPA_DDL_AUTO: update
       SPRING_JPA_SHOW_SQL: "true"
-      SPRING_KAFKA_BOOTSTRAP_SERVERS: solontax-g1-kafka:9092
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka-broker:29092
     depends_on:
       - postgres
-      - kafka
+      - kafka-broker
     networks:
       - solontax-network
 
 volumes:
   postgres_data:
-    driver: local
-  kafka_data:
     driver: local
 
 networks:

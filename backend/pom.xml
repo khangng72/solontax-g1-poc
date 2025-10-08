@@ -41,6 +41,7 @@
     <modules>
         <module>solontax-g1-management-core</module>
         <module>solontax-g1-management-adapter</module>
+        <module>solontax-g1-management-kafka</module>
     </modules>
 
     <name>solontax-g1</name>

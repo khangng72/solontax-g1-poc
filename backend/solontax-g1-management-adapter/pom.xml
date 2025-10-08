@@ -70,12 +70,19 @@
         <dependency>
             <groupId>solontax.g1</groupId>
             <artifactId>solontax-g1-management-core</artifactId>
-            <version>0.0.1-SNAPSHOT</version>
+            <version>${project.version}</version>
         </dependency>
+
         <dependency>
             <groupId>com.h2database</groupId>
             <artifactId>h2</artifactId>
             <scope>runtime</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>solontax.g1</groupId>
+            <artifactId>solontax-g1-management-kafka</artifactId>
+            <version>0.0.1-SNAPSHOT</version>
         </dependency>
     </dependencies>
 
