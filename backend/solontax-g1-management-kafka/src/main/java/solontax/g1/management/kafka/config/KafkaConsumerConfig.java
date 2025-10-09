@@ -12,6 +12,7 @@ import org.springframework.kafka.core.DefaultKafkaConsumerFactory;
 import org.springframework.kafka.support.mapping.DefaultJackson2JavaTypeMapper;
 import org.springframework.kafka.support.mapping.Jackson2JavaTypeMapper;
 import org.springframework.kafka.support.serializer.JsonDeserializer;
+import solontax.g1.management.core.common.dto.TaxCalculationDto;
 import solontax.g1.management.core.domain.model.Person;
 
 import java.util.HashMap;
@@ -41,8 +42,8 @@ public class KafkaConsumerConfig {
     }
 
     @Bean
-    public ConcurrentKafkaListenerContainerFactory<String, Person> kafkaListenerContainerFactory() {
-        ConcurrentKafkaListenerContainerFactory<String, Person> factory = new ConcurrentKafkaListenerContainerFactory<>();
+    public ConcurrentKafkaListenerContainerFactory<String, Object> kafkaListenerContainerFactory() {
+        ConcurrentKafkaListenerContainerFactory<String, Object> factory = new ConcurrentKafkaListenerContainerFactory<>();
         factory.setConsumerFactory(consumerFactory());
         return factory;
     }
@@ -53,6 +54,7 @@ public class KafkaConsumerConfig {
 
         Map<String, Class<?>> mappings = new HashMap<>();
         mappings.put("person", Person.class);
+        mappings.put("taxCalculation", TaxCalculationDto.class);
 
         typeMapper.setIdClassMapping(mappings);
 

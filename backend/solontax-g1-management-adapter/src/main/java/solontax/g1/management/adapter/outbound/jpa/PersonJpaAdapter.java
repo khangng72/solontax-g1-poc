@@ -30,6 +30,7 @@ public class PersonJpaAdapter implements PersonRepositoryPort {
     private PersonEntity toPersonEntity(Person person) {
         return PersonEntity
                 .builder()
+                .id(person.getId())
                 .firstName(person.getFirstName())
                 .lastName(person.getLastName())
                 .dateOfBirth(person.getDateOfBirth())

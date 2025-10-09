@@ -6,11 +6,13 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
+import solontax.g1.management.core.common.dto.TaxCalculationDto;
 import solontax.g1.management.core.constant.KafkaTopics;
 import solontax.g1.management.core.constant.OperationType;
 import solontax.g1.management.core.domain.model.Person;
 import solontax.g1.management.core.domain.port.PersonRepositoryPort;
 
+import java.util.Optional;
 import java.util.UUID;
 
 
@@ -43,7 +45,7 @@ public class PersonConsumer {
                 }
             }
         }
-        
+
         Person person;
         if (value instanceof Person p) {
             person = p;
@@ -62,5 +64,20 @@ public class PersonConsumer {
         } else {
             personRepository.save(person);
         }
+    }
+
+    @KafkaListener(
+            topics = KafkaTopics.TAX_CALCULATION_TOPIC,
+            groupId = "solontax-g1-group",
+            containerFactory = "kafkaListenerContainerFactory"
+    )
+    public void listenTaxCalculationEvents(ConsumerRecord<String, Object> consumedEvent) {
+        TaxCalculationDto taxCalculationDto = (TaxCalculationDto) consumedEvent.value();
+        Optional<Person> person = personRepository.findByTaxNumber(taxCalculationDto.getTaxNumber());
+        person.ifPresent(p -> {
+                    p.setTaxDebt(p.getTaxDebt() + taxCalculationDto.getCalculatedTax());
+                    personRepository.save(p);
+                }
+        );
     }
 }

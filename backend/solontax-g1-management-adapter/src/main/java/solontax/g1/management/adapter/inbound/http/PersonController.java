@@ -1,5 +1,6 @@
 package solontax.g1.management.adapter.inbound.http;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.data.domain.Page;
@@ -9,6 +10,7 @@ import org.springframework.web.bind.annotation.*;
 import solontax.g1.management.core.application.dto.PersonDto;
 import solontax.g1.management.core.application.service.PersonService;
 import solontax.g1.management.core.common.dto.PersonQueryParams;
+import solontax.g1.management.core.common.dto.TaxCalculationDto;
 import solontax.g1.management.core.domain.model.Person;
 import solontax.g1.management.kafka.producer.PersonProducer;
 
@@ -51,5 +53,11 @@ public class PersonController {
     public ResponseEntity<String> sendDeleteEvent(@PathVariable("id") UUID id) {
         producer.delete(id);
         return ResponseEntity.ok("Delete person event send");
+    }
+
+    @PostMapping("/kafka/tax")
+    public ResponseEntity<String> sendTaxCalculationEvent(@RequestBody @Valid TaxCalculationDto taxCalculationDto) {
+        producer.calculateTax(taxCalculationDto);
+        return ResponseEntity.ok("Tax calculation event sent");
     }
 }
