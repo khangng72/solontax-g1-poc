@@ -29,4 +29,20 @@ public class PersonProducer {
     public void calculateTax(TaxCalculationDto taxCalculationDto) {
         kafkaTemplate.send(KafkaTopics.TAX_CALCULATION_TOPIC, OperationType.UPSERT.toString(), taxCalculationDto);
     }
+
+    public void calculateTaxInBatch(TaxCalculationDto taxCalculationDto) {
+        for (int i = 0; i < 6; i++) {
+            TaxCalculationDto newVirtualTaxCalculationDto = TaxCalculationDto
+                    .builder()
+                    .taxNumber(taxCalculationDto.getTaxNumber())
+                    .calculatedTax(taxCalculationDto.getCalculatedTax() + i)
+                    .build();
+
+            kafkaTemplate.send(
+                    KafkaTopics.TAX_CALCULATION_TOPIC_BATCH,
+                    OperationType.UPSERT.toString(),
+                    newVirtualTaxCalculationDto);
+        }
+    }
+
 }

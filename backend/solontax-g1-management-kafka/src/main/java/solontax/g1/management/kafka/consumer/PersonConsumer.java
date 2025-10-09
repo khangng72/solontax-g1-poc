@@ -6,6 +6,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.springframework.http.HttpStatus;
 import org.springframework.kafka.annotation.KafkaListener;
+import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.stereotype.Service;
 import solontax.g1.management.core.common.dto.TaxCalculationDto;
 import solontax.g1.management.core.constant.KafkaTopics;
@@ -15,6 +17,7 @@ import solontax.g1.management.core.domain.port.PersonRepositoryPort;
 import solontax.g1.management.core.exception.CommonException;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -24,6 +27,7 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class PersonConsumer {
     private final PersonRepositoryPort personRepository;
+    private final KafkaTemplate<String, Object> kafkaTemplate;
 
     private void processUpdateTaxDebt(TaxCalculationDto taxCalculationDto) {
         Optional<Person> person = personRepository.findByTaxNumber(taxCalculationDto.getTaxNumber());
@@ -32,7 +36,7 @@ public class PersonConsumer {
                 p -> {
                     p.setTaxDebt(p.getTaxDebt() + taxCalculationDto.getCalculatedTax());
                     personRepository.save(p);
-                    log.info("Consumer consume message successfully");
+                    log.info("Process update taxDebt successfully");
                 },
                 () -> {
                     throw new CommonException("update tax failed", HttpStatus.INTERNAL_SERVER_ERROR);
@@ -110,5 +114,25 @@ public class PersonConsumer {
         TaxCalculationDto taxCalculationDto = (TaxCalculationDto) consumedEvent.value();
         processUpdateTaxDebt(taxCalculationDto);
         log.info("Resolve dead event: {} successfully", consumedEvent);
+    }
+
+    @KafkaListener(
+            topics = KafkaTopics.TAX_CALCULATION_TOPIC_BATCH,
+            groupId = "solontax-g1-batch-group",
+            containerFactory = "kafkaBatchListenerContainerFactory"
+    )
+    public void listenTaxCalculationEventsInBatch(List<ConsumerRecord<String, Object>> consumedRecords, Acknowledgment acknowledgment) {
+        log.info("Batch size: {}", consumedRecords.size());
+        for (ConsumerRecord<String, Object> consumedRecord : consumedRecords) {
+            TaxCalculationDto taxCalculationDto = (TaxCalculationDto) consumedRecord.value();
+            try {
+                processUpdateTaxDebt(taxCalculationDto);
+            } catch (Exception e) {
+                log.error("event with key {} and content {} consumed fail", consumedRecord.key(), consumedRecord.value().toString());
+                kafkaTemplate.send(consumedRecord.topic() + ".DLT", consumedRecord.key(), consumedRecord.value());
+            }
+        }
+
+        acknowledgment.acknowledge();
     }
 }

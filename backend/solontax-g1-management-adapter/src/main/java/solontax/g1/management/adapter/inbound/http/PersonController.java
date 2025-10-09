@@ -60,4 +60,12 @@ public class PersonController {
         producer.calculateTax(taxCalculationDto);
         return ResponseEntity.ok("Tax calculation event sent");
     }
+
+    @PostMapping("/kafka/batch/tax")
+    public ResponseEntity<String> sendTaxCalculationEventInBatch(
+            @RequestBody @Valid TaxCalculationDto taxCalculationDto
+    ) {
+        producer.calculateTaxInBatch(taxCalculationDto);
+        return ResponseEntity.ok("Tax calculation batch event sent");
+    }
 }
