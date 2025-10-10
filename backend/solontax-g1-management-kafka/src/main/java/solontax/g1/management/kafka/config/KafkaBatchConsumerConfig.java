@@ -33,8 +33,21 @@ public class KafkaBatchConsumerConfig {
     private String kafkaServer;
 
     private static DefaultErrorHandler createBatchErrorHandler(
-            KafkaTemplate<String, Object> kafkaTemplate
+            KafkaTemplate<String, Object> kafkaTemplate,
+            boolean isDeadLetterQueue
     ) {
+        ExponentialBackOff backOff = new ExponentialBackOff(2000L, 1);
+        backOff.setMaxAttempts(MAX_ATTEMPT);
+
+        if (isDeadLetterQueue) {
+            return new DefaultErrorHandler(
+                    (consumedRecord, exception)
+                            -> log.error("DLT processing failed: {}",
+                            exception.getMessage(), exception),
+                    backOff
+            );
+        }
+
         DeadLetterPublishingRecoverer recoverer = new DeadLetterPublishingRecoverer(
                 kafkaTemplate,
                 ((consumerRecord, exception) -> new TopicPartition(
@@ -42,8 +55,6 @@ public class KafkaBatchConsumerConfig {
                 ))
         );
 
-        ExponentialBackOff backOff = new ExponentialBackOff(3000L, 1);
-        backOff.setMaxAttempts(MAX_ATTEMPT);
 
         DefaultErrorHandler handler = new DefaultErrorHandler(recoverer, backOff);
         handler.addRetryableExceptions(RetriableException.class);
@@ -79,7 +90,21 @@ public class KafkaBatchConsumerConfig {
         factory.setConsumerFactory(batchConsumerFactory);
         factory.setBatchListener(true);
         factory.getContainerProperties().setAckMode(ContainerProperties.AckMode.MANUAL);
-        factory.setCommonErrorHandler(createBatchErrorHandler(kafkaTemplate));
+        factory.setCommonErrorHandler(createBatchErrorHandler(kafkaTemplate, false));
+
+        return factory;
+    }
+
+    @Bean(name = "dltBatchListenerContainerFactory")
+    public ConcurrentKafkaListenerContainerFactory<String, Object> dltBatchListenerContainerFactory(
+            @Qualifier("batchConsumerFactory") ConsumerFactory<String, Object> batchConsumerFactory,
+            KafkaTemplate<String, Object> kafkaTemplate
+    ) {
+        ConcurrentKafkaListenerContainerFactory<String, Object> factory =
+                new ConcurrentKafkaListenerContainerFactory<>();
+        DefaultErrorHandler errorHandler = createBatchErrorHandler(kafkaTemplate, true);
+        factory.setConsumerFactory(batchConsumerFactory);
+        factory.setCommonErrorHandler(errorHandler);
 
         return factory;
     }

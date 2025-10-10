@@ -29,7 +29,12 @@ public class PersonConsumer {
     private final PersonRepositoryPort personRepository;
     private final KafkaTemplate<String, Object> kafkaTemplate;
 
+
     private void processUpdateTaxDebt(TaxCalculationDto taxCalculationDto) {
+        if (LocalDateTime.now().getSecond() % 2 == 0) {
+            throw new CommonException("Invalid tax", HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+
         Optional<Person> person = personRepository.findByTaxNumber(taxCalculationDto.getTaxNumber());
 
         person.ifPresentOrElse(
@@ -134,5 +139,17 @@ public class PersonConsumer {
         }
 
         acknowledgment.acknowledge();
+    }
+
+    @KafkaListener(
+            topics = KafkaTopics.TAX_CALCULATION_TOPIC_BATCH + ".DLT",
+            groupId = "solontax-g1-batch-group",
+            containerFactory = "dltBatchListenerContainerFactory"
+    )
+    public void listenTaxCalculationFailedEventsInBatch(List<TaxCalculationDto> dtos) {
+        log.info("RESOLVING BATCH DEAD EVENT: batch size {}", dtos.size());
+        for (TaxCalculationDto taxCalculationDto : dtos) {
+            processUpdateTaxDebt(taxCalculationDto);
+        }
     }
 }
