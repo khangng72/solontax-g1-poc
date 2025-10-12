@@ -56,6 +56,22 @@ public class PersonConsumer {
     }
 
     @KafkaListener(
+            topics = KafkaTopics.UPSERT_PERSON_TOPIC + ".DLT",
+            groupId = "solontax-g1-dlt-group"
+    )
+    public void listenUpsertPersonDltEvents(ConsumerRecord<String, Object> consumerRecord) {
+        try {
+            Person person = (Person) consumerRecord.value();
+            Person savePerson = personRepository.save(person);
+            log.info("Resolve upsert person with id = {} successfully", savePerson.getId());
+        } catch (Exception e) {
+            log.error("Resolve upsert person: {} failed", consumerRecord.value());
+            throw e;
+        }
+    }
+
+
+    @KafkaListener(
             topics = KafkaTopics.DELETE_PERSON_TOPIC,
             groupId = "solontax-g1-group",
             containerFactory = "kafkaListenerContainerFactory"
@@ -63,11 +79,27 @@ public class PersonConsumer {
     public void listenDeletePersonEvents(ConsumerRecord<String, Object> consumerRecord) {
         log.info("Start performing [DELETE] operation on person");
         try {
+            Utils.generateRandomFailure("Intended error", 0.9);
             UUID deleteId = (UUID) consumerRecord.value();
             personRepository.deleteById(deleteId);
             log.info("Delete person with id = {} successfully", deleteId);
         } catch (Exception e) {
             log.error("Delete person with id = {} failed", consumerRecord.value());
+            throw e;
+        }
+    }
+
+    @KafkaListener(
+            topics = KafkaTopics.DELETE_PERSON_TOPIC + ".DLT",
+            groupId = "solontax-g1-dlt-group"
+    )
+    public void listenDeletePersonDltEvents(ConsumerRecord<String, Object> consumerRecord) {
+        try {
+            log.info("Try to resolve {}", consumerRecord.partition());
+            UUID deleteId = (UUID) consumerRecord.value();
+            personRepository.deleteById(deleteId);
+        } catch (Exception e) {
+            log.error("Failed to resolve: {}", consumerRecord.partition());
             throw e;
         }
     }
@@ -82,6 +114,7 @@ public class PersonConsumer {
         log.info("Start updating tax debt: {}", consumedEvent.value());
         try {
             TaxCalculationDto taxCalculationDto = (TaxCalculationDto) consumedEvent.value();
+            // This generator is used to cause fail randomly
             Utils.generateRandomFailure("Intended error", 0.5);
             processUpdateTaxDebt(taxCalculationDto);
         } catch (Exception e) {
