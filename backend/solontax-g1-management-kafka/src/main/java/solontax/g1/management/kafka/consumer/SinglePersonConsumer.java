@@ -20,7 +20,7 @@ import java.util.UUID;
 @Service
 @Slf4j
 @RequiredArgsConstructor
-public class PersonConsumer {
+public class SinglePersonConsumer {
     private final PersonRepositoryPort personRepository;
 
     private void processUpdateTaxDebt(TaxCalculationDto taxCalculationDto) {

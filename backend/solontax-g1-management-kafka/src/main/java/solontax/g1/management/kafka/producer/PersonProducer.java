@@ -8,6 +8,7 @@ import solontax.g1.management.core.common.dto.TaxCalculationDto;
 import solontax.g1.management.core.constant.KafkaTopics;
 import solontax.g1.management.core.domain.model.Person;
 
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -31,5 +32,15 @@ public class PersonProducer {
                 KafkaTopics.TAX_CALCULATION_TOPIC,
                 taxCalculationDto.getTaxNumber().toString(),
                 taxCalculationDto);
+    }
+
+    public void calculateTaxInBatch(List<TaxCalculationDto> taxCalculationDtoList) {
+        for (TaxCalculationDto taxCalculationDto : taxCalculationDtoList) {
+            kafkaTemplate.send(
+                    KafkaTopics.TAX_CALCULATION_TOPIC_BATCH,
+                    taxCalculationDto.getTaxNumber().toString(),
+                    taxCalculationDto
+            );
+        }
     }
 }

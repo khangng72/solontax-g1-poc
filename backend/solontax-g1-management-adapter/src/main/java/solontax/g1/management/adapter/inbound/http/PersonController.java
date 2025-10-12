@@ -14,6 +14,7 @@ import solontax.g1.management.core.common.dto.TaxCalculationDto;
 import solontax.g1.management.core.domain.model.Person;
 import solontax.g1.management.kafka.producer.PersonProducer;
 
+import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -59,5 +60,12 @@ public class PersonController {
     public ResponseEntity<String> sendTaxCalculationEvent(@RequestBody @Valid TaxCalculationDto taxCalculationDto) {
         producer.calculateTax(taxCalculationDto);
         return ResponseEntity.ok("Tax calculation event sent");
+    }
+
+    @PostMapping("/kafka/batch/tax")
+    public ResponseEntity<String> sendTaxCalculationEvent(
+            @RequestBody @Valid List<TaxCalculationDto> taxCalculationDtoList) {
+        producer.calculateTaxInBatch(taxCalculationDtoList);
+        return ResponseEntity.ok("Tax calculation in batch event sent");
     }
 }
