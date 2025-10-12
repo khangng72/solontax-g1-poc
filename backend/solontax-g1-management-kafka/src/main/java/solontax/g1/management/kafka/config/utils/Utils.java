@@ -1,24 +1,26 @@
 package solontax.g1.management.kafka.config.utils;
 
-import org.springframework.kafka.support.mapping.DefaultJackson2JavaTypeMapper;
-import org.springframework.kafka.support.mapping.Jackson2JavaTypeMapper;
-import solontax.g1.management.core.common.dto.TaxCalculationDto;
-import solontax.g1.management.core.domain.model.Person;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
+import solontax.g1.management.core.exception.CommonException;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.Random;
 
+@Slf4j
 public class Utils {
-    public static DefaultJackson2JavaTypeMapper typeMapper() {
-        DefaultJackson2JavaTypeMapper typeMapper = new DefaultJackson2JavaTypeMapper();
-        typeMapper.setTypePrecedence(Jackson2JavaTypeMapper.TypePrecedence.TYPE_ID);
+    private static final Random random = new Random();
 
-        Map<String, Class<?>> mappings = new HashMap<>();
-        mappings.put("person", Person.class);
-        mappings.put("taxCalculation", TaxCalculationDto.class);
+    private Utils() {
+    }
 
-        typeMapper.setIdClassMapping(mappings);
+    public static void generateRandomFailure(String message, double errorRate) {
 
-        return typeMapper;
+        if (random.nextDouble() < errorRate) {
+            log.error("Intended error: {}", message);
+            throw new CommonException(
+                    "Intended error: " + message,
+                    HttpStatus.INTERNAL_SERVER_ERROR
+            );
+        }
     }
 }

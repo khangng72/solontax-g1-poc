@@ -13,6 +13,7 @@ import java.util.UUID;
 @Getter
 @Setter
 @Builder
+@ToString
 public class PersonEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)

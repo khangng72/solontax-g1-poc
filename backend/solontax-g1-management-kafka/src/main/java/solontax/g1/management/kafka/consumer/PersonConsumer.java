@@ -1,23 +1,18 @@
 package solontax.g1.management.kafka.consumer;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.springframework.http.HttpStatus;
 import org.springframework.kafka.annotation.KafkaListener;
-import org.springframework.kafka.core.KafkaTemplate;
-import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.stereotype.Service;
 import solontax.g1.management.core.common.dto.TaxCalculationDto;
 import solontax.g1.management.core.constant.KafkaTopics;
-import solontax.g1.management.core.constant.OperationType;
 import solontax.g1.management.core.domain.model.Person;
 import solontax.g1.management.core.domain.port.PersonRepositoryPort;
 import solontax.g1.management.core.exception.CommonException;
+import solontax.g1.management.kafka.config.utils.Utils;
 
-import java.time.LocalDateTime;
-import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -27,14 +22,8 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class PersonConsumer {
     private final PersonRepositoryPort personRepository;
-    private final KafkaTemplate<String, Object> kafkaTemplate;
-
 
     private void processUpdateTaxDebt(TaxCalculationDto taxCalculationDto) {
-        if (LocalDateTime.now().getSecond() % 2 == 0) {
-            throw new CommonException("Invalid tax", HttpStatus.INTERNAL_SERVER_ERROR);
-        }
-
         Optional<Person> person = personRepository.findByTaxNumber(taxCalculationDto.getTaxNumber());
 
         person.ifPresentOrElse(
@@ -50,106 +39,54 @@ public class PersonConsumer {
     }
 
     @KafkaListener(
-            topics = KafkaTopics.PERSON_CRUD_TOPIC,
+            topics = KafkaTopics.UPSERT_PERSON_TOPIC,
             groupId = "solontax-g1-group",
             containerFactory = "kafkaListenerContainerFactory"
     )
-    public void listenPersonCrudEvents(ConsumerRecord<String, Object> consumedEvent) {
-        String operationTypeString = consumedEvent.key();
-        OperationType operationType = OperationType.valueOf(operationTypeString);
-        Object value = consumedEvent.value();
-
-        if (operationType == OperationType.DELETE) {
-            UUID id;
-            if (value instanceof String stringValue) {
-                try {
-                    id = UUID.fromString(stringValue);
-                    personRepository.deleteById(id);
-                    return;
-                } catch (IllegalArgumentException e) {
-                    log.error("Invalid UUID format: {}", stringValue);
-                    return;
-                }
-            }
-        }
-
-        Person person;
-        if (value instanceof Person p) {
-            person = p;
-        } else {
-            try {
-                ObjectMapper mapper = new ObjectMapper();
-                person = mapper.convertValue(value, Person.class);
-            } catch (Exception e) {
-                log.error("Failed to convert value to Person: {}", e.getMessage());
-                return;
-            }
-        }
-
-        if (operationType == OperationType.DELETE) {
-            personRepository.deleteById(person.getId());
-        } else {
-            personRepository.save(person);
+    public void listenUpsertPersonEvents(ConsumerRecord<String, Object> consumerRecord) {
+        log.info("Start performing [UPSERT] operation on entity person");
+        try {
+            Person person = (Person) consumerRecord.value();
+            Person savePerson = personRepository.save(person);
+            log.info("Upsert person with id = {} successfully", savePerson.getId());
+        } catch (Exception e) {
+            log.error("Upsert person: {} failed", consumerRecord.value());
+            throw e;
         }
     }
+
+    @KafkaListener(
+            topics = KafkaTopics.DELETE_PERSON_TOPIC,
+            groupId = "solontax-g1-group",
+            containerFactory = "kafkaListenerContainerFactory"
+    )
+    public void listenDeletePersonEvents(ConsumerRecord<String, Object> consumerRecord) {
+        log.info("Start performing [DELETE] operation on person");
+        try {
+            UUID deleteId = (UUID) consumerRecord.value();
+            personRepository.deleteById(deleteId);
+            log.info("Delete person with id = {} successfully", deleteId);
+        } catch (Exception e) {
+            log.error("Delete person with id = {} failed", consumerRecord.value());
+            throw e;
+        }
+    }
+
 
     @KafkaListener(
             topics = KafkaTopics.TAX_CALCULATION_TOPIC,
             groupId = "solontax-g1-group",
             containerFactory = "kafkaListenerContainerFactory"
     )
-    public void listenTaxCalculationEvents(ConsumerRecord<String, Object> consumedEvent)
-            throws CommonException {
-        if (LocalDateTime.now().getSecond() % 2 == 0) {
-            log.info("Virtually cause the consumer to fail: {}", LocalDateTime.now());
-            throw new CommonException("Virtual failure of updating tax", HttpStatus.INTERNAL_SERVER_ERROR);
-        }
-        TaxCalculationDto taxCalculationDto = (TaxCalculationDto) consumedEvent.value();
-        processUpdateTaxDebt(taxCalculationDto);
-
-    }
-
-    @KafkaListener(
-            topics = KafkaTopics.TAX_CALCULATION_TOPIC + ".DLT",
-            groupId = "solontax-g1-group",
-            containerFactory = "dltListenerContainerFactory"
-    )
-    public void listenTaxCalculationEventsDeadLetter(ConsumerRecord<String, Object> consumedEvent) {
-        log.info("Dead letter queue try to consume: {}", consumedEvent.value());
-        TaxCalculationDto taxCalculationDto = (TaxCalculationDto) consumedEvent.value();
-        processUpdateTaxDebt(taxCalculationDto);
-        log.info("Resolve dead event: {} successfully", consumedEvent);
-    }
-
-    @KafkaListener(
-            topics = KafkaTopics.TAX_CALCULATION_TOPIC_BATCH,
-            groupId = "solontax-g1-batch-group",
-            containerFactory = "kafkaBatchListenerContainerFactory"
-    )
-    public void listenTaxCalculationEventsInBatch(List<ConsumerRecord<String, Object>> consumedRecords, Acknowledgment acknowledgment) {
-        log.info("Batch size: {}", consumedRecords.size());
-        for (ConsumerRecord<String, Object> consumedRecord : consumedRecords) {
-            TaxCalculationDto taxCalculationDto = (TaxCalculationDto) consumedRecord.value();
-            try {
-                processUpdateTaxDebt(taxCalculationDto);
-            } catch (Exception e) {
-                log.error("event with key {} and content {} consumed fail", consumedRecord.key(), consumedRecord.value().toString());
-                kafkaTemplate.send(consumedRecord.topic() + ".DLT", consumedRecord.key(), consumedRecord.value());
-            }
-        }
-
-        acknowledgment.acknowledge();
-    }
-
-    @KafkaListener(
-            topics = KafkaTopics.TAX_CALCULATION_TOPIC_BATCH + ".DLT",
-            groupId = "solontax-g1-batch-group",
-            containerFactory = "dltBatchListenerContainerFactory"
-    )
-    public void listenTaxCalculationFailedEventsInBatch(List<TaxCalculationDto> dtos) {
-        log.info("RESOLVING BATCH DEAD EVENT: batch size {}", dtos.size());
-        for (TaxCalculationDto taxCalculationDto : dtos) {
+    public void listenTaxCalculationEvents(ConsumerRecord<String, Object> consumedEvent) {
+        log.info("Start updating tax debt: {}", consumedEvent.value());
+        try {
+            TaxCalculationDto taxCalculationDto = (TaxCalculationDto) consumedEvent.value();
+            Utils.generateRandomFailure("Intended error", 0.5);
             processUpdateTaxDebt(taxCalculationDto);
+        } catch (Exception e) {
+            log.error("Error updating tax debt: {}", consumedEvent.value());
+            throw e;
         }
     }
 }
