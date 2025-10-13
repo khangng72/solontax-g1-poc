@@ -26,7 +26,6 @@
             </plugin>
 
             <plugin>
-                <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
                 <configuration>
                     <excludes>
@@ -35,7 +34,17 @@
                             <groupId>org.projectlombok</groupId>
                         </exclude>
                     </excludes>
+                    <layout>JAR</layout>
+                    <mainClass>solontax.g1.management.migration.SolontaxG1ManagementMigrationApplication</mainClass>
                 </configuration>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>repackage</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <groupId>org.springframework.boot</groupId>
             </plugin>
         </plugins>
     </build>

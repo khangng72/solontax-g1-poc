@@ -43,7 +43,7 @@ services:
   solontax-g1-management:
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: solontax-g1-management-adapter/Dockerfile
     container_name: solontax-g1-management
     image: solontax-g1-management
     restart: always
@@ -59,6 +59,31 @@ services:
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka-broker:29092
     depends_on:
       - postgres
+      - kafka-broker
+    networks:
+      - solontax-network
+
+  solontax-g1-management-migration:
+    build:
+      context: .
+      dockerfile: solontax-g1-management-migration/Dockerfile
+    container_name: solontax-g1-management-migration
+    image: solontax-g1-management-migration
+    restart: always
+    ports:
+      - "1930:1930"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5430/solontax_g1
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: postgres
+      SPRING_SERVER_PORT: 1930
+      SPRING_JPA_DDL_AUTO: update
+      SPRING_JPA_SHOW_SQL: "true"
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka-broker:29092
+      KAFKA_ENDPOINT_DOMAIN: http://solontax-g1-management:1975
+    depends_on:
+      - postgres
+      - solontax-g1-management
       - kafka-broker
     networks:
       - solontax-network
