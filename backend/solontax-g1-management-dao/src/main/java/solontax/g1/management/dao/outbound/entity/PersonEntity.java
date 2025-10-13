@@ -1,4 +1,4 @@
-package solontax.g1.management.adapter.outbound.entity;
+package solontax.g1.management.dao.outbound.entity;
 
 import jakarta.persistence.*;
 import lombok.*;

@@ -1,4 +1,4 @@
-package solontax.g1.management.adapter.outbound.jpa;
+package solontax.g1.management.dao.outbound.jpa;
 
 import cz.jirutka.rsql.parser.RSQLParser;
 import cz.jirutka.rsql.parser.ast.Node;
@@ -10,9 +10,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Component;
-import solontax.g1.management.adapter.filter.RSQLCustomVisitor;
-import solontax.g1.management.adapter.outbound.entity.PersonEntity;
-import solontax.g1.management.adapter.repository.PersonJpaRepository;
+import solontax.g1.management.core.filter.RSQLCustomVisitor;
+import solontax.g1.management.dao.outbound.entity.PersonEntity;
+import solontax.g1.management.dao.repository.PersonJpaRepository;
 import solontax.g1.management.core.common.dto.PersonQueryParams;
 import solontax.g1.management.core.domain.model.Person;
 import solontax.g1.management.core.domain.port.PersonRepositoryPort;

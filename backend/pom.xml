@@ -43,6 +43,7 @@
         <module>solontax-g1-management-adapter</module>
         <module>solontax-g1-management-kafka</module>
         <module>solontax-g1-management-migration</module>
+        <module>solontax-g1-management-dao</module>
     </modules>
 
     <name>solontax-g1</name>

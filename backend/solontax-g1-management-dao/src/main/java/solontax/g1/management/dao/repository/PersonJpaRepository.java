@@ -1,10 +1,10 @@
-package solontax.g1.management.adapter.repository;
+package solontax.g1.management.dao.repository;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.repository.JpaRepository;
-import solontax.g1.management.adapter.outbound.entity.PersonEntity;
+import solontax.g1.management.dao.outbound.entity.PersonEntity;
 
 import java.util.Optional;
 import java.util.UUID;

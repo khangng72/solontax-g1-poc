@@ -1,4 +1,4 @@
-package solontax.g1.management.adapter.filter;
+package solontax.g1.management.core.filter;
 
 import cz.jirutka.rsql.parser.ast.AndNode;
 import cz.jirutka.rsql.parser.ast.ComparisonNode;

@@ -62,14 +62,14 @@
         </dependency>
 
         <dependency>
-            <artifactId>rsql-parser</artifactId>
-            <groupId>cz.jirutka.rsql</groupId>
-            <version>2.1.0</version>
+            <groupId>solontax.g1</groupId>
+            <artifactId>solontax-g1-management-core</artifactId>
+            <version>${project.version}</version>
         </dependency>
 
         <dependency>
             <groupId>solontax.g1</groupId>
-            <artifactId>solontax-g1-management-core</artifactId>
+            <artifactId>solontax-g1-management-dao</artifactId>
             <version>${project.version}</version>
         </dependency>
 
