@@ -16,7 +16,10 @@ import solontax.g1.management.kafka.entity.KafkaOffset;
 import solontax.g1.management.kafka.entity.id.KafkaOffsetId;
 
 import java.time.Duration;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
 
 
 @Service
@@ -61,27 +64,9 @@ public class KafkaBatchService {
         log.info("Polled {} records", consumerRecords.count());
 
         List<Object> batch = new ArrayList<>();
-        Map<Integer, Long> partitionOffsets = new HashMap<>();
 
         for (ConsumerRecord<String, Object> consumerRecord : consumerRecords) {
             batch.add(consumerRecord.value());
-            partitionOffsets.put(
-                    consumerRecord.partition(),
-                    Math.max(partitionOffsets.getOrDefault(
-                                    consumerRecord.partition(), -1L),
-                            consumerRecord.offset())
-            );
-        }
-
-        if (!batch.isEmpty()) {
-            for (TopicPartition tp : partitions) {
-                KafkaOffset updatedKafkaOffset = KafkaOffset.builder()
-                        .topic(topic)
-                        .partitionId(tp.partition())
-                        .lastOffset(partitionOffsets.getOrDefault(tp.partition(), -1L))
-                        .build();
-                kafkaOffsetService.save(updatedKafkaOffset);
-            }
         }
 
         Map<TopicPartition, Long> endOffsets = consumer.endOffsets(partitions);
@@ -89,6 +74,17 @@ public class KafkaBatchService {
         for (TopicPartition tp : partitions) {
             log.info("tp:{}, position:{}, end:{}", tp, consumer.position(tp), endOffsets.get(tp));
             remaining += endOffsets.get(tp) - consumer.position(tp);
+        }
+
+        if (!batch.isEmpty()) {
+            for (TopicPartition tp : partitions) {
+                KafkaOffset updatedKafkaOffset = KafkaOffset.builder()
+                        .topic(topic)
+                        .partitionId(tp.partition())
+                        .lastOffset(consumer.position(tp)-1)
+                        .build();
+                kafkaOffsetService.save(updatedKafkaOffset);
+            }
         }
 
         boolean hasMore = remaining > 0;
