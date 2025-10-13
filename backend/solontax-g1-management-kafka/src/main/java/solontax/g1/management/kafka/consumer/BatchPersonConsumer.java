@@ -62,7 +62,7 @@ public class BatchPersonConsumer {
         log.info("Listen tax calculation batch with size: {}", consumerRecordList.size());
         for (ConsumerRecord<String, Object> consumerRecord : consumerRecordList) {
             try {
-                Utils.generateRandomFailure("Intended error", 1);
+                Utils.generateRandomFailure("Intended error", 0.5);
                 TaxCalculationDto taxCalculationDto = (TaxCalculationDto) consumerRecord.value();
                 processUpdateTaxDebt(taxCalculationDto);
             } catch (Exception exception) {
@@ -79,7 +79,6 @@ public class BatchPersonConsumer {
             containerFactory = "kafkaListenerContainerFactory"
     )
     public void listenTaxCalculationBatchDltEvents(ConsumerRecord<String, Object> consumerRecord) {
-        Utils.generateRandomFailure("intended error", 1);
         log.info("Catch batch element failed: {}", consumerRecord.value());
         TaxCalculationDto taxCalculationDto = (TaxCalculationDto) consumerRecord.value();
         processUpdateTaxDebt(taxCalculationDto);

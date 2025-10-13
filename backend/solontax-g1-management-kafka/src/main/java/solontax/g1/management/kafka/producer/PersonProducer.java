@@ -34,6 +34,11 @@ public class PersonProducer {
                 taxCalculationDto);
     }
 
+    public void upsertForManualConsume(Person person) {
+        kafkaTemplate.send(KafkaTopics.UPSERT_PERSON_BATCH_TOPIC, person.getTaxNumber().toString(), person);
+        log.info("Produced Upsert person event for manual consumer");
+    }
+
     public void calculateTaxInBatch(List<TaxCalculationDto> taxCalculationDtoList) {
         for (TaxCalculationDto taxCalculationDto : taxCalculationDtoList) {
             kafkaTemplate.send(

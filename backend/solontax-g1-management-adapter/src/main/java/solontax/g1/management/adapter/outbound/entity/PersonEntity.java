@@ -32,8 +32,9 @@ public class PersonEntity {
     private Long taxDebt;
 
     @PrePersist
+    @PreUpdate
     public void setDefaultValueForTaxDebt() {
-        if (taxDebt == null) {
+        if (taxDebt == null || taxDebt < 0) {
             taxDebt = 0L;
         }
     }
