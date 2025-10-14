@@ -46,6 +46,24 @@
                 </executions>
                 <groupId>org.springframework.boot</groupId>
             </plugin>
+
+            <plugin>
+                <groupId>com.google.cloud.tools</groupId>
+                <artifactId>jib-maven-plugin</artifactId>
+                <configuration>
+                    <from>
+                        <image>openjdk:17-jdk-slim</image>
+                    </from>
+                    <to>
+                        <image>solontax-g1-management-migration:0.0.1</image>
+                    </to>
+                    <container>
+                        <ports>
+                            <port>1930</port>
+                        </ports>
+                    </container>
+                </configuration>
+            </plugin>
         </plugins>
     </build>
 
