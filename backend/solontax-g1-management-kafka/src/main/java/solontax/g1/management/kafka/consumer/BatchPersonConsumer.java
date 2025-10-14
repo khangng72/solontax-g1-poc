@@ -62,7 +62,6 @@ public class BatchPersonConsumer {
         log.info("Listen tax calculation batch with size: {}", consumerRecordList.size());
         for (ConsumerRecord<String, Object> consumerRecord : consumerRecordList) {
             try {
-                Utils.generateRandomFailure("Intended error", 0.5);
                 TaxCalculationDto taxCalculationDto = (TaxCalculationDto) consumerRecord.value();
                 processUpdateTaxDebt(taxCalculationDto);
             } catch (Exception exception) {

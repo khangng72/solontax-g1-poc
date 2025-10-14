@@ -29,7 +29,7 @@ public class PersonService {
                 .lastName(person.getLastName())
                 .age(age)
                 .taxNumber(person.getTaxNumber())
-                .taxDebt(person.getTaxNumber())
+                .taxDebt(person.getTaxDebt())
                 .build();
     }
 

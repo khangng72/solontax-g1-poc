@@ -45,7 +45,7 @@ services:
       context: .
       dockerfile: solontax-g1-management-adapter/Dockerfile
     container_name: solontax-g1-management
-    image: solontax-g1-management
+    image: solontax-g1-management:0.0.1
     restart: always
     ports:
       - "1975:1975"
@@ -68,7 +68,7 @@ services:
       context: .
       dockerfile: solontax-g1-management-migration/Dockerfile
     container_name: solontax-g1-management-migration
-    image: solontax-g1-management-migration
+    image: solontax-g1-management-migration:0.0.1
     restart: always
     ports:
       - "1930:1930"
