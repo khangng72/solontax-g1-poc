@@ -9,11 +9,15 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import solontax.g1.management.core.application.dto.PersonDto;
 import solontax.g1.management.core.application.service.PersonService;
+import solontax.g1.management.core.common.dto.KafkaBatchResponse;
 import solontax.g1.management.core.common.dto.PersonQueryParams;
 import solontax.g1.management.core.common.dto.TaxCalculationDto;
+import solontax.g1.management.core.constant.KafkaTopics;
 import solontax.g1.management.core.domain.model.Person;
 import solontax.g1.management.kafka.producer.PersonProducer;
+import solontax.g1.management.kafka.service.KafkaBatchService;
 
+import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -24,6 +28,7 @@ public class PersonController {
 
     private final PersonService personService;
     private final PersonProducer producer;
+    private final KafkaBatchService kafkaBatchService;
 
     @PostMapping
     public ResponseEntity<PersonDto> create(@RequestBody Person person) {
@@ -62,10 +67,21 @@ public class PersonController {
     }
 
     @PostMapping("/kafka/batch/tax")
-    public ResponseEntity<String> sendTaxCalculationEventInBatch(
-            @RequestBody @Valid TaxCalculationDto taxCalculationDto
-    ) {
-        producer.calculateTaxInBatch(taxCalculationDto);
-        return ResponseEntity.ok("Tax calculation batch event sent");
+    public ResponseEntity<String> sendTaxCalculationEvent(
+            @RequestBody @Valid List<TaxCalculationDto> taxCalculationDtoList) {
+        producer.calculateTaxInBatch(taxCalculationDtoList);
+        return ResponseEntity.ok("Tax calculation in batch event sent");
+    }
+
+    @PostMapping("/kafka/batch/manual")
+    public ResponseEntity<String> sendUpsertEventForManualConsume(@RequestBody @Valid Person person) {
+        producer.upsertForManualConsume(person);
+        return ResponseEntity.ok("Upsert person event is sent to upsert-person-batch");
+    }
+
+    @GetMapping("/kafka/batch/manual")
+    public ResponseEntity<KafkaBatchResponse> consumeUpsertPersonBatchEvent() {
+        KafkaBatchResponse response = kafkaBatchService.pollEvents(KafkaTopics.UPSERT_PERSON_BATCH_TOPIC, 3);
+        return ResponseEntity.ok(response);
     }
 }

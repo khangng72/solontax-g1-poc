@@ -62,14 +62,14 @@
         </dependency>
 
         <dependency>
-            <artifactId>rsql-parser</artifactId>
-            <groupId>cz.jirutka.rsql</groupId>
-            <version>2.1.0</version>
+            <groupId>solontax.g1</groupId>
+            <artifactId>solontax-g1-management-core</artifactId>
+            <version>${project.version}</version>
         </dependency>
 
         <dependency>
             <groupId>solontax.g1</groupId>
-            <artifactId>solontax-g1-management-core</artifactId>
+            <artifactId>solontax-g1-management-dao</artifactId>
             <version>${project.version}</version>
         </dependency>
 
@@ -116,6 +116,28 @@
                     </execution>
                 </executions>
                 <groupId>org.springframework.boot</groupId>
+            </plugin>
+
+            <plugin>
+                <groupId>com.google.cloud.tools</groupId>
+                <artifactId>jib-maven-plugin</artifactId>
+                <configuration>
+                    <from>
+                        <image>openjdk:17-jdk-slim</image>
+                    </from>
+                    <to>
+                        <image>solontax-g1-management:0.0.1</image>
+                    </to>
+                    <container>
+                        <ports>
+                            <port>1975</port>
+                        </ports>
+                        <jvmFlags>
+                            <jvmFlag>-Xms512m</jvmFlag>
+                            <jvmFlag>-Xmx1024m</jvmFlag>
+                        </jvmFlags>
+                    </container>
+                </configuration>
             </plugin>
         </plugins>
     </build>

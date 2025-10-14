@@ -1,0 +1,41 @@
+package solontax.g1.management.dao.outbound.entity;
+
+import jakarta.persistence.*;
+import lombok.*;
+
+import java.time.LocalDate;
+import java.util.UUID;
+
+@Entity
+@Table(name = "persons")
+@AllArgsConstructor
+@NoArgsConstructor
+@Getter
+@Setter
+@Builder
+@ToString
+public class PersonEntity {
+    @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
+    private UUID id;
+
+    private String firstName;
+
+    private String lastName;
+
+    private LocalDate dateOfBirth;
+
+    @Column(updatable = false, unique = true)
+    private Long taxNumber;
+
+    @Column(nullable = false)
+    private Long taxDebt;
+
+    @PrePersist
+    @PreUpdate
+    public void setDefaultValueForTaxDebt() {
+        if (taxDebt == null || taxDebt < 0) {
+            taxDebt = 0L;
+        }
+    }
+}

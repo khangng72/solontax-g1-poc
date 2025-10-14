@@ -1,5 +1,6 @@
 package solontax.g1.management.core.domain.model;
 
+import jakarta.validation.constraints.NotNull;
 import lombok.*;
 
 import java.time.LocalDate;
@@ -20,6 +21,7 @@ public class Person {
 
     private LocalDate dateOfBirth;
 
+    @NotNull
     private Long taxNumber;
 
     private Long taxDebt;
