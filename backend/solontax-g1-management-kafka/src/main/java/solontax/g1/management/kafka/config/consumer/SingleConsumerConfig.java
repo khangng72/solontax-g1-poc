@@ -16,6 +16,7 @@ import org.springframework.kafka.listener.DefaultErrorHandler;
 import org.springframework.kafka.support.serializer.JsonDeserializer;
 import org.springframework.util.backoff.ExponentialBackOff;
 import solontax.g1.management.core.constant.KafkaTopics;
+import solontax.g1.management.kafka.constants.ConsumerGroups;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -78,7 +79,7 @@ public class SingleConsumerConfig extends GenericConsumerConfig {
 
         Map<String, Object> props = new HashMap<>();
         props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, kafkaServer);
-        props.put(ConsumerConfig.GROUP_ID_CONFIG, "solontax-g1-group");
+        props.put(ConsumerConfig.GROUP_ID_CONFIG, ConsumerGroups.SINGLE_DEFAULT_GROUP);
         props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
         props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, JsonDeserializer.class);
         props.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");

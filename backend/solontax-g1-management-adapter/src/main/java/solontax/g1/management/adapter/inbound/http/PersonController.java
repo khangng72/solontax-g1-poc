@@ -31,8 +31,8 @@ public class PersonController {
     private final KafkaBatchService kafkaBatchService;
 
     @PostMapping
-    public ResponseEntity<PersonDto> create(@RequestBody Person person) {
-        PersonDto savedPerson = personService.create(person);
+    public ResponseEntity<PersonDto> upsert(@RequestBody Person person) {
+        PersonDto savedPerson = personService.upsert(person);
         return new ResponseEntity<>(savedPerson, HttpStatus.CREATED);
     }
 
@@ -40,6 +40,12 @@ public class PersonController {
     public ResponseEntity<Page<PersonDto>> search(@ModelAttribute PersonQueryParams personQueryParams) {
         Page<PersonDto> personDtoPage = personService.search(personQueryParams);
         return new ResponseEntity<>(personDtoPage, HttpStatus.OK);
+    }
+
+    @DeleteMapping("{id}")
+    public ResponseEntity<String> delete(@PathVariable("id") UUID id) {
+        personService.delete(id);
+        return ResponseEntity.ok("Deleted person with id = " + id);
     }
 
     @GetMapping("/by-tax-number/{taxNumber}")

@@ -12,6 +12,7 @@ import solontax.g1.management.core.domain.model.Person;
 import solontax.g1.management.core.domain.port.PersonRepositoryPort;
 import solontax.g1.management.core.exception.CommonException;
 import solontax.g1.management.kafka.config.utils.Utils;
+import solontax.g1.management.kafka.constants.ConsumerGroups;
 
 import java.util.Optional;
 import java.util.UUID;
@@ -40,12 +41,13 @@ public class SinglePersonConsumer {
 
     @KafkaListener(
             topics = KafkaTopics.UPSERT_PERSON_TOPIC,
-            groupId = "solontax-g1-group",
+            groupId = ConsumerGroups.SINGLE_UPSERT_PERSON_GROUP,
             containerFactory = "kafkaListenerContainerFactory"
     )
     public void listenUpsertPersonEvents(ConsumerRecord<String, Object> consumerRecord) {
         log.info("Start performing [UPSERT] operation on entity person");
         try {
+            Utils.generateRandomFailure("Intended Error", 0.9);
             Person person = (Person) consumerRecord.value();
             Person savePerson = personRepository.save(person);
             log.info("Upsert person with id = {} successfully", savePerson.getId());
@@ -57,7 +59,7 @@ public class SinglePersonConsumer {
 
     @KafkaListener(
             topics = KafkaTopics.UPSERT_PERSON_TOPIC + ".DLT",
-            groupId = "solontax-g1-dlt-group"
+            groupId = ConsumerGroups.SINGLE_UPSERT_PERSON_GROUP + ".DLT"
     )
     public void listenUpsertPersonDltEvents(ConsumerRecord<String, Object> consumerRecord) {
         try {
@@ -73,7 +75,7 @@ public class SinglePersonConsumer {
 
     @KafkaListener(
             topics = KafkaTopics.DELETE_PERSON_TOPIC,
-            groupId = "solontax-g1-group",
+            groupId = ConsumerGroups.SINGLE_DELETE_PERSON_GROUP,
             containerFactory = "kafkaListenerContainerFactory"
     )
     public void listenDeletePersonEvents(ConsumerRecord<String, Object> consumerRecord) {
@@ -91,7 +93,7 @@ public class SinglePersonConsumer {
 
     @KafkaListener(
             topics = KafkaTopics.DELETE_PERSON_TOPIC + ".DLT",
-            groupId = "solontax-g1-dlt-group"
+            groupId = ConsumerGroups.SINGLE_DELETE_PERSON_GROUP + ".DLT"
     )
     public void listenDeletePersonDltEvents(ConsumerRecord<String, Object> consumerRecord) {
         try {
@@ -107,7 +109,7 @@ public class SinglePersonConsumer {
 
     @KafkaListener(
             topics = KafkaTopics.TAX_CALCULATION_TOPIC,
-            groupId = "solontax-g1-group",
+            groupId = ConsumerGroups.SINGLE_TAX_CALCULATION_GROUP,
             containerFactory = "kafkaListenerContainerFactory"
     )
     public void listenTaxCalculationEvents(ConsumerRecord<String, Object> consumedEvent) {
@@ -115,10 +117,27 @@ public class SinglePersonConsumer {
         try {
             TaxCalculationDto taxCalculationDto = (TaxCalculationDto) consumedEvent.value();
             // This generator is used to cause fail randomly
-            Utils.generateRandomFailure("Intended error", 0.5);
+            Utils.generateRandomFailure("Intended error", 0.9);
             processUpdateTaxDebt(taxCalculationDto);
         } catch (Exception e) {
             log.error("Error updating tax debt: {}", consumedEvent.value());
+            throw e;
+        }
+    }
+
+    @KafkaListener(
+            topics = KafkaTopics.TAX_CALCULATION_TOPIC + ".DLT",
+            groupId = ConsumerGroups.SINGLE_TAX_CALCULATION_GROUP + ".DLT",
+            containerFactory = "kafkaListenerContainerFactory"
+    )
+    public void listenTaxCalculationDltEvents(ConsumerRecord<String, Object> consumedEvent) {
+        log.info("Resolve updating tax debt dead letter: {}", consumedEvent.value());
+        try {
+            TaxCalculationDto taxCalculationDto = (TaxCalculationDto) consumedEvent.value();
+            Utils.generateRandomFailure("Intended error: ", 0.2);
+            processUpdateTaxDebt(taxCalculationDto);
+        } catch (Exception e) {
+            log.error("Fail to resolve updating tax debt dead letter: {}", consumedEvent.value());
             throw e;
         }
     }
