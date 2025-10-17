@@ -61,8 +61,9 @@ public class BatchPersonConsumer {
             groupId = ConsumerGroups.BATCH_TAX_CALCULATION_GROUP + ".DLT",
             containerFactory = "kafkaListenerContainerFactory"
     )
-    public void listenTaxCalculationBatchDltEvents(ConsumerRecord<String, Object> consumerRecord) {
+    public void listenTaxCalculationBatchDltEvents(ConsumerRecord<String, Object> consumerRecord) throws InterruptedException {
         log.info("Catch batch element failed: {}", consumerRecord.value());
+        Thread.sleep(500);
         TaxCalculationDto taxCalculationDto = (TaxCalculationDto) consumerRecord.value();
         personService.processUpdateTaxDebt(taxCalculationDto);
     }
