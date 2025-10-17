@@ -1,0 +1,97 @@
+name: solontax-g1
+
+services:
+  postgres:
+    image: postgres:13.22-alpine3.21
+    container_name: solontax-g1-postgres
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: solontax_g1
+    command: [ "postgres", "-p", "5430", "-c", "timezone=UTC" ]
+    ports:
+      - "5430:5430"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - solontax-network
+
+  kafka-broker:
+    image: apache/kafka:latest
+    container_name: kafka-broker
+    ports:
+      - "9092:9092"   # for Windows (host)
+      - "29092:29092" # for Docker containers
+    environment:
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka-broker:9093
+      KAFKA_LISTENERS: PLAINTEXT_HOST://0.0.0.0:9092,PLAINTEXT_DOCKER://0.0.0.0:29092,CONTROLLER://0.0.0.0:9093
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT_HOST://localhost:9092,PLAINTEXT_DOCKER://kafka-broker:29092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT_HOST:PLAINTEXT,PLAINTEXT_DOCKER:PLAINTEXT,CONTROLLER:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT_DOCKER
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_NUM_PARTITIONS: 3
+    networks:
+      - solontax-network
+
+  solontax-g1-management:
+    build:
+      context: .
+      dockerfile: solontax-g1-management-adapter/Dockerfile
+    container_name: solontax-g1-management
+    image: solontax-g1-management:0.0.1
+    restart: always
+    ports:
+      - "1975:1975"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5430/solontax_g1
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: postgres
+      SPRING_SERVER_PORT: 1975
+      SPRING_JPA_DDL_AUTO: update
+      SPRING_JPA_SHOW_SQL: "true"
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka-broker:29092
+    depends_on:
+      - postgres
+      - kafka-broker
+    networks:
+      - solontax-network
+
+  solontax-g1-management-migration:
+    build:
+      context: .
+      dockerfile: solontax-g1-management-migration/Dockerfile
+    container_name: solontax-g1-management-migration
+    image: solontax-g1-management-migration:0.0.1
+    restart: always
+    ports:
+      - "1930:1930"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5430/solontax_g1
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: postgres
+      SPRING_SERVER_PORT: 1930
+      SPRING_JPA_DDL_AUTO: update
+      SPRING_JPA_SHOW_SQL: "true"
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka-broker:29092
+      KAFKA_ENDPOINT_DOMAIN: http://solontax-g1-management:1975
+    depends_on:
+      - postgres
+      - solontax-g1-management
+      - kafka-broker
+    networks:
+      - solontax-network
+
+volumes:
+  postgres_data:
+    driver: local
+
+networks:
+  solontax-network:
+    driver: bridge
